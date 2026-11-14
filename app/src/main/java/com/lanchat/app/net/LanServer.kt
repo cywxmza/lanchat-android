@@ -34,10 +34,13 @@ class LanServer(
                 while (isRunning) {
                     val socket: Socket = serverSocket?.accept() ?: break
                     socket.tcpNoDelay = true
-                    val conn = PeerConnection(socket, myId, myName(), myAvatarColor(), object : PeerConnection.Listener {
+                    // conn 在自己的初始化器里被 listener 引用会报“未解析”，
+                    // 所以先用 var 占位，建好后再赋值，listener 里用 conn!!。
+                    var conn: PeerConnection? = null
+                    conn = PeerConnection(socket, myId, myName(), myAvatarColor(), object : PeerConnection.Listener {
                         override fun onHandshake(peerId: String, peerName: String, avatarColor: Int, remoteIp: String) {
                             connections[peerId]?.takeIf { it !== conn }?.close()
-                            connections[peerId] = conn
+                            connections[peerId] = conn!!
                             listener.onHandshake(peerId, peerName, avatarColor, remoteIp)
                         }
                         override fun onChat(peerId: String, peerName: String, text: String, time: Long) = listener.onChat(peerId, peerName, text, time)
@@ -52,7 +55,7 @@ class LanServer(
                             listener.onDisconnected(peerId)
                         }
                     })
-                    conn.start()
+                    conn!!.start()
                 }
             } catch (e: Exception) {
                 if (isRunning) Log.e("LanServer", "accept failed", e)

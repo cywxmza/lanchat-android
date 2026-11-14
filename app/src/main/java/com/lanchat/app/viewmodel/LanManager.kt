@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -111,9 +112,9 @@ class LanManager(private val context: Context, private val scope: CoroutineScope
 
     suspend fun init() {
         myId = prefs.myId()
-        _myName.value = kotlinx.coroutines.flow.first(prefs.myName)
-        _myColor.value = kotlinx.coroutines.flow.first(prefs.avatarColor)
-        serverPort = kotlinx.coroutines.flow.first(prefs.serverPort)
+        _myName.value = prefs.myName.first()
+        _myColor.value = prefs.avatarColor.first()
+        serverPort = prefs.serverPort.first()
         _myIp.value = WifiUtils.localIp(context)
         server = LanServer(serverPort, myId, { _myName.value }, { _myColor.value }, listener).also { it.start() }
         client = LanClient(myId, { _myName.value }, { _myColor.value }, listener)
